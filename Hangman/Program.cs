@@ -10,42 +10,45 @@ namespace Hangman
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
             string path = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "\\wordSet.txt"; ;
             
             Console.WriteLine("Write set of words (to be saved to " + path + "):");
             File.WriteAllText(path, Console.ReadLine());
             
             string[] wordSet = File.ReadAllText(path).Split(",".ToCharArray());
-            
-            foreach(string i in wordSet)
-            {
-                Console.WriteLine(i);
-            }
 
             Random rng = new Random();
             string word = wordSet[rng.Next(wordSet.Length)];
-            char[] word0 = Enumerable.Repeat(char.Parse("_"), word.Length).ToArray();
-
-            Console.WriteLine(word0);
-            foreach(char i in word0)
-            {
-                Console.Write(i + " ");
-            }
+            char[] word0 = Enumerable.Repeat('_', word.Length).ToArray();
 
             string guess;
             StringBuilder guesses = new StringBuilder();
-            int numberOfGuesses = 0;
-            do
+            int numberOfGuesses = 10;
+
+            while (numberOfGuesses > 0)
             {
+                Console.Write("\n");
+                foreach (char i in word0)
+                {
+                    Console.Write(i + " ");
+                }
+                Console.Write("\n");
+                Console.WriteLine(guesses);
+                Console.WriteLine(numberOfGuesses);
+                
                 Console.WriteLine("Guess word:");
                 guess = Console.ReadLine();
-                if (guess.Length == 1)
+                if (!guess.All(char.IsLetter))
                 {
-                    if (word0.Contains(guess))
-                    {
-                        continue;
-                    }
+                    Console.WriteLine("Invalid guess.");
+                }
+                else if ((guesses.ToString().Contains(guess+", "))||(Array.IndexOf(word0, guess) > -1))
+                {
+                    Console.WriteLine("Guessed previously.");
+                }
+                else if (guess.Length == 1)
+                {
+                    
                     if (word.Contains(guess))
                     {
                         for (int i = 0; i < word.Length; i++)
@@ -55,36 +58,32 @@ namespace Hangman
                                 word0[i] = guess[0];
                             }
                         }
+                        if (Array.IndexOf(word0, '_') < 0)
+                        {
+                            break;
+                        }
                     }
                     else
                     {
                         guesses.Append(guess + ", ");
-                        numberOfGuesses++;
+                        numberOfGuesses--;
                     }
                 }
                 else if (guess.Length > 1)
                 {
-                    if(word.Equals(guess, StringComparison.OrdinalIgnoreCase))
+                    if (word.Equals(guess, StringComparison.OrdinalIgnoreCase))
                     {
-                        Console.WriteLine("You guessed correctly!");
                         break;
                     }
                     else
                     {
                         guesses.Append(guess + ", ");
-                        numberOfGuesses++;
+                        numberOfGuesses--;
                     }
                 }
-                foreach (char i in word0)
-                {
-                    Console.Write(i + " ");
-                }
-                Console.WriteLine(guesses);
+            }
 
-            } while ((numberOfGuesses < 10)&(!word0.Contains("_")));
-
-            //string guessed;
-            //word.Equals(guessed, StringComparison.OrdinalIgnoreCase);
+            Console.WriteLine((numberOfGuesses > 0) ? "Correct guess!" : "You lose!");
         }
     }
 }
