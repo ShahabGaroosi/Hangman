@@ -12,13 +12,14 @@ namespace Hangman
         {
             string path = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "\\wordSet.txt"; ;
             
-            Console.WriteLine("Write set of words (to be saved to " + path + "):");
+            Console.WriteLine($"Write set of words (to be saved to {path}:");
             File.WriteAllText(path, Console.ReadLine());
             
             string[] wordSet = File.ReadAllText(path).Split(",".ToCharArray());
+            File.Delete(path);
 
             Random rng = new Random();
-            string word = wordSet[rng.Next(wordSet.Length)];
+            string word = wordSet[rng.Next(wordSet.Length)].ToUpper();
             char[] word0 = Enumerable.Repeat('_', word.Length).ToArray();
 
             string guess;
@@ -27,62 +28,53 @@ namespace Hangman
 
             while (numberOfGuesses > 0)
             {
-                Console.Write("\n");
                 foreach (char i in word0)
                 {
                     Console.Write(i + " ");
                 }
                 Console.Write("\n");
                 Console.WriteLine(guesses);
-                Console.WriteLine(numberOfGuesses);
-                
+                Console.WriteLine($"{numberOfGuesses} guesses left.");
+                Console.Write("\n");
+
                 Console.WriteLine("Guess word:");
-                guess = Console.ReadLine();
+                guess = Console.ReadLine().ToUpper();
+
                 if (!guess.All(char.IsLetter))
                 {
                     Console.WriteLine("Invalid guess.");
                 }
-                else if ((guesses.ToString().Contains(guess+", "))||(Array.IndexOf(word0, guess) > -1))
+                else if ((guesses.ToString().Contains(guess+","))||(Array.IndexOf(word0, guess) > -1))
                 {
                     Console.WriteLine("Guessed previously.");
                 }
-                else if (guess.Length == 1)
+                else if ((guess.Length == 1) && (word.Contains(guess[0])))
                 {
-                    
-                    if (word.Contains(guess))
+                    for (int i = 0; i < word.Length; i++)
                     {
-                        for (int i = 0; i < word.Length; i++)
+                        if (word[i] == guess[0])
                         {
-                            if (word[i] == guess[0])
-                            {
-                                word0[i] = guess[0];
-                            }
-                        }
-                        if (Array.IndexOf(word0, '_') < 0)
-                        {
-                            break;
+                            word0[i] = guess[0];
                         }
                     }
-                    else
-                    {
-                        guesses.Append(guess + ", ");
-                        numberOfGuesses--;
-                    }
-                }
-                else if (guess.Length > 1)
-                {
-                    if (word.Equals(guess, StringComparison.OrdinalIgnoreCase))
+                    if (Array.IndexOf(word0, '_') < 0)
                     {
                         break;
                     }
-                    else
-                    {
-                        guesses.Append(guess + ", ");
-                        numberOfGuesses--;
-                    }
                 }
+                else if ((guess.Length > 1) && (word.Equals(guess, StringComparison.OrdinalIgnoreCase)))
+                {
+                    break;
+                }
+                else if (guess.Length > 0)
+                {
+                    guesses.Append(guess + ", ");
+                    numberOfGuesses--;
+                }
+                Console.Write("\n");
             }
 
+            Console.WriteLine($"Secret word: {word}");
             Console.WriteLine((numberOfGuesses > 0) ? "Correct guess!" : "You lose!");
         }
     }
