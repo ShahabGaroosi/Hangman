@@ -10,41 +10,23 @@ namespace Hangman
     {
         static void Main(string[] args)
         {
-            string path = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "\\wordSet.txt"; ;
-            
-            Console.WriteLine($"Write set of words (to be saved to {path}:");
-            File.WriteAllText(path, Console.ReadLine());
-            
-            string[] wordSet = File.ReadAllText(path).Split(",".ToCharArray());
-            File.Delete(path);
-
-            Random rng = new Random();
-            string word = wordSet[rng.Next(wordSet.Length)].ToUpper();
+            string word = GenerateWord(GetWordSet());
             char[] word0 = Enumerable.Repeat('_', word.Length).ToArray();
 
+            StringBuilder guesses = new StringBuilder(",");
             string guess;
-            StringBuilder guesses = new StringBuilder();
             int numberOfGuesses = 10;
 
             while (numberOfGuesses > 0)
             {
-                foreach (char i in word0)
-                {
-                    Console.Write(i + " ");
-                }
-                Console.Write("\n");
-                Console.WriteLine(guesses);
-                Console.WriteLine($"{numberOfGuesses} guesses left.");
-                Console.Write("\n");
-
-                Console.WriteLine("Guess word:");
-                guess = Console.ReadLine().ToUpper();
+                PrintUpdate(word0, guesses, numberOfGuesses);
+                guess = GetGuess();
 
                 if (!guess.All(char.IsLetter))
                 {
                     Console.WriteLine("Invalid guess.");
                 }
-                else if ((guesses.ToString().Contains(guess+","))||(Array.IndexOf(word0, guess) > -1))
+                else if ((guesses.ToString().Contains($",{guess},")) || ((guess.Length==1) && (Array.IndexOf(word0, guess[0]) > -1)))
                 {
                     Console.WriteLine("Guessed previously.");
                 }
@@ -68,14 +50,54 @@ namespace Hangman
                 }
                 else if (guess.Length > 0)
                 {
-                    guesses.Append(guess + ", ");
+                    guesses.Append(guess + ",");
                     numberOfGuesses--;
                 }
-                Console.Write("\n");
             }
+            PrintResult(word, numberOfGuesses);
+        }
 
-            Console.WriteLine($"Secret word: {word}");
+        static string[] GetWordSet()
+        {
+            string path = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "\\wordSet.txt"; ;
+
+            Console.WriteLine($"Write set of words (to be saved to {path}:");
+            File.WriteAllText(path, Console.ReadLine());
+
+            string[] wordSet = File.ReadAllText(path).Split(",".ToCharArray());
+            File.Delete(path);
+
+            return wordSet;
+        }
+
+        static string GenerateWord(string[] wordSet)
+        {
+            Random rng = new Random();
+            return wordSet[rng.Next(wordSet.Length)].ToUpper();
+        }
+
+        static void PrintUpdate(char[] word0, StringBuilder guesses, int numberOfGuesses)
+        {
+            Console.WriteLine();
+            foreach (char i in word0)
+            {
+                Console.Write(i + " ");
+            }
+            Console.WriteLine($"\n{guesses}");
+            Console.WriteLine($"{numberOfGuesses} guesses left.\n");
+        }
+
+        static string GetGuess()
+        {
+            Console.WriteLine("Guess word:");
+            return Console.ReadLine().ToUpper();
+        }
+
+        static void PrintResult(string word, int numberOfGuesses)
+        {
+            Console.WriteLine($"\nSecret word: {word}");
             Console.WriteLine((numberOfGuesses > 0) ? "Correct guess!" : "You lose!");
         }
+
     }
 }
